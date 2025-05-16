@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.*;
 
 public class TaskManager {
     static class Task{
@@ -20,7 +21,26 @@ public class TaskManager {
     static ArrayList<Task> tasks = new ArrayList<>();
     static Scanner scanner = new Scanner(System.in);
 
+    static void loadTasksFromFile() {
+        File file = new File("tasks.txt");
+        if(!file.exists()) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))){
+            String line;
+            while ((line = reader.readLine()) != null){
+                boolean isDone = line.startsWith("[✓]");
+                String description = line.substring(3).trim();
+                Task task = new Task(description);
+                task.isDone = isDone;
+                tasks.add(task);
+            }
+        } catch (IOException e) {
+            System.out.println("Could not load tasks");
+        }
+    }
+
     public static void main(String[] args){
+        loadTasksFromFile();
         while (true) {
             System.out.println("\n--- Task Manager ---");
             System.out.println("1. Add Task");
@@ -45,7 +65,8 @@ public class TaskManager {
                 case 3 -> markTaskDone();
                 case 4 -> deleteTask();
                 case 5 -> {
-                    System.out.println("Goodbye!");
+                    saveTaskToFile();
+                    System.out.println("Tasks saved. Goodbye!");
                     return;
                 }
                 default -> System.out.println("Invalid option");
@@ -99,6 +120,17 @@ public class TaskManager {
             }
         } catch (NumberFormatException e) {
             System.out.println("Please enter a valid number. ");
+        }
+    }
+
+    static void saveTaskToFile() {
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter("tasks.txt"))) {
+            for (Task task : tasks){
+                writer.write(task.toString());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("Could not save tasks.");
         }
     }
 }
